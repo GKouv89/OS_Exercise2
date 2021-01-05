@@ -37,6 +37,7 @@ acutest.h
 *.x86_64
 *.hex
 test
+main
 
 # Debug files
 *.dSYM/
