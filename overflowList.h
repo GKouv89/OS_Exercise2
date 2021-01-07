@@ -2,10 +2,10 @@
 #define OVERFLOWLIST_H
 
 typedef struct overflowlistnode{
-  int page_no;
+  unsigned int page_no;
   int dirty;
-  overflowlistnode *next;
-  overflowlistnode *prev;
+  struct overflowlistnode *next;
+  struct overflowlistnode *prev;
 } oflist_node;
 
 typedef struct overflowlist{
@@ -14,8 +14,9 @@ typedef struct overflowlist{
 }oflist;
 
 void list_create(oflist**);
-oflist_node* create_node(int);
-void new_page(oflist*, int);
+oflist_node* create_node(unsigned int);
+void new_page(oflist*, unsigned int);
+oflist_node* searchForPage(oflist *, unsigned int);
 void delete_node(oflist_node**);
 void destroy_list(oflist** list);
 

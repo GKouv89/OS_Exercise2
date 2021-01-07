@@ -1,11 +1,11 @@
-FLAGS = -g -o
-OBJ = addressOps.o
+FLAGS = -o
+OBJ = addressOps.o hashedPageTable.o overflowList.o
 
 %.o: %.c
-	gcc -c $< -o $@
+	gcc -g -c $< -o $@
 
 tests/%.o: tests/%.c
-	gcc -c $< -o $@
+	gcc -g -c $< -o $@
 
 testSuite: tests/testSuite.o $(OBJ)
 	gcc $(FLAGS) test tests/testSuite.o $(OBJ)

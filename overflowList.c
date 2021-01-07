@@ -1,13 +1,14 @@
 #include <stdio.h>
+#include <stdlib.h>
 #include "overflowList.h"
 
 void list_create(oflist** list){
-    (*list) = malloc(sizeof(of_list));
+    (*list) = malloc(sizeof(oflist));
     (*list)->front = NULL;
     (*list)->rear = NULL;
 }
 
-oflist_node* create_node(int page_no){
+oflist_node* create_node(unsigned int page_no){
     oflist_node* new_node = malloc(sizeof(oflist_node));
     new_node->page_no = page_no;
     new_node->dirty = 0;
@@ -15,24 +16,39 @@ oflist_node* create_node(int page_no){
     return new_node;
 }
 
-void new_page(oflist* list, int page_no){
+void new_page(oflist* list, unsigned int page_no){
     oflist_node *new_node = create_node(page_no);
     if(list->front == NULL){ // empty list
         list->front = new_node;
         list->rear = new_node;
     }else{
-        node->prev = list->rear;
-        list->rear->next = node;
-        list->rear = node;
+        new_node->prev = list->rear;
+        list->rear->next = new_node;
+        list->rear = new_node;
     }
 }
 
-void remove_page(oflist* list, int page_no){
+oflist_node* searchForPage(oflist *list, unsigned int page_no){
+  if(list == NULL){
+    return NULL;
+  }
+  oflist_node *temp = list->front;
+  while(temp != NULL){
+    if(temp->page_no == page_no){
+      // page exists
+      return temp;
+    }
+    temp = temp->next;
+  }
+  return NULL;
+}
+
+void remove_page(oflist* list, unsigned int page_no){
   oflist_node *temp = list->front;
   while(temp){
     if(temp->page_no == page_no){
       if(temp == list->front && temp == list->rear){
-        list->front == list->rear == NULL;
+        list->front = list->rear = NULL;
       }else if(temp == list->front){
         temp->next->prev = NULL;
         list->front = temp->next;
@@ -54,11 +70,14 @@ void delete_node(oflist_node** node){
 }
 
 void destroy_list(oflist** list){
+    if(*list == NULL){
+      return;
+    }
     oflist_node* temp = (*list)->rear;
     if(temp != NULL && (*list)->front != NULL){
         oflist_node* prev = NULL;
         while(temp){
-            prev = temp->previous;
+            prev = temp->prev;
             if(prev){ // Otherwise, we've reached list front
                 prev->next = NULL;
             }
