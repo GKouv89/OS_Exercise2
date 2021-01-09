@@ -11,7 +11,7 @@ testSuite: tests/testSuite.o $(OBJ)
 	gcc $(FLAGS) test tests/testSuite.o $(OBJ)
 
 main: main.o 
-	gcc $(FLAGS) main main.o
+	gcc $(FLAGS) main main.o $(OBJ)
 
 clean: 
 	rm -f main main.o

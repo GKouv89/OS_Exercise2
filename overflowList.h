@@ -17,6 +17,7 @@ void list_create(oflist**);
 oflist_node* create_node(unsigned int);
 void new_page(oflist*, unsigned int);
 oflist_node* searchForPage(oflist *, unsigned int);
+void remove_page(oflist*, unsigned int, int *);
 void delete_node(oflist_node**);
 void destroy_list(oflist** list);
 

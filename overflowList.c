@@ -43,7 +43,7 @@ oflist_node* searchForPage(oflist *list, unsigned int page_no){
   return NULL;
 }
 
-void remove_page(oflist* list, unsigned int page_no){
+void remove_page(oflist* list, unsigned int page_no, int *dirty){
   oflist_node *temp = list->front;
   while(temp){
     if(temp->page_no == page_no){
@@ -59,10 +59,18 @@ void remove_page(oflist* list, unsigned int page_no){
         temp->prev->next = temp->next;
         temp->next->prev = temp->prev;
       }
+      *dirty = temp->dirty;
       delete_node(&temp);
     }
   }
 }
+
+// void print_oflist(oflist *list){
+  // oflist_node *temp = list->front;
+  // while(temp){
+    // printf();
+  // }
+// }
 
 void delete_node(oflist_node** node){
     free(*node);

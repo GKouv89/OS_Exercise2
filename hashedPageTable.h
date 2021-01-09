@@ -17,7 +17,9 @@ typedef struct hash_table{
 }page_table;
 
 void create_page_table(page_table **, int);
-void insert_page(page_table *, unsigned int);
+int insert_page(page_table *, unsigned int);
+void set_dirty(page_table *, unsigned int);
+void remove_page_from_page_table(page_table *, unsigned int, int *);
 int hash_val(int, unsigned int);
 void destroy_page_table(page_table **);
 

@@ -178,6 +178,35 @@ void test_list_search(){
   destroy_list(&list);
 }
 
+void test_page_table_list_remove(){
+  page_table *pt;
+  create_page_table(&pt, BZIP_PROC_BUCKET_NO);
+  
+  int exists;
+  exists = insert_page(pt, 0);
+  TEST_ASSERT(exists == 0);
+  exists = insert_page(pt, 1);
+  TEST_ASSERT(exists == 0);
+  exists = insert_page(pt, 2);
+  TEST_ASSERT(exists == 0);
+
+  exists = insert_page(pt, 1);
+  TEST_ASSERT(exists == 1);
+  
+  set_dirty(pt, 2);
+  
+  int dirty;
+  remove_page_from_page_table(pt, 1, &dirty);
+  TEST_ASSERT(dirty == 0);
+  remove_page_from_page_table(pt, 2, &dirty);
+  TEST_ASSERT(dirty == 1);
+  remove_page_from_page_table(pt, 0, &dirty);
+  TEST_ASSERT(dirty == 0);
+  
+  destroy_page_table(&pt);
+  TEST_ASSERT(pt == NULL);
+}
+
 void test_lruStack_functions(){
   lruStack *ls;
   int no_of_frames = 3;
@@ -234,6 +263,7 @@ TEST_LIST = {
   {"diff_pages_recognization", test_diff_pages_recognization},
   {"page_table_create_delete", test_page_table_create_delete},
   {"page_table_no_of_entries", test_no_of_entries_per_bucket},
+  {"page_table_remove_set_dirty", test_page_table_list_remove},
   {"overflow_list_search", test_list_search},
   {"lruStack_functions", test_lruStack_functions},
   {NULL, NULL}

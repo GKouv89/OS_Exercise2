@@ -16,13 +16,30 @@ int hash_function(int no_of_buckets, unsigned int page_no){
   return page_no % no_of_buckets; 
 }
 
-void insert_page(page_table *pt, unsigned int page_no){
+int insert_page(page_table *pt, unsigned int page_no){
   unsigned int hash_value = hash_function(pt->no_of_buckets, page_no);
   oflist_node *finder = searchForPage(pt->table[hash_value].bucket_list, page_no);
   if(finder == NULL){
     new_page(pt->table[hash_value].bucket_list, page_no);
     pt->table[hash_value].no_of_entries++;
+    return 0;
+  }else{
+    return 1;
   }
+}
+
+void set_dirty(page_table *pt, unsigned int page_no){
+  unsigned int hash_value = hash_function(pt->no_of_buckets, page_no);
+  oflist_node *finder = searchForPage(pt->table[hash_value].bucket_list, page_no); 
+  if(finder->dirty == 0){
+    finder->dirty = 1;
+  }
+}
+
+void remove_page_from_page_table(page_table *pt, unsigned int page_no, int *dirty){
+  unsigned int hash_value = hash_function(pt->no_of_buckets, page_no);
+  remove_page(pt->table[hash_value].bucket_list, page_no, dirty);
+  pt->table[hash_value].no_of_entries--;
 }
 
 void destroy_page_table(page_table **pt){
