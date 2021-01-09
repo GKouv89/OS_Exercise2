@@ -2,6 +2,7 @@
 #include "../addressOps.h"
 #include "../hashedPageTable.h"
 #include "../overflowList.h"
+#include "../lruStack.h"
 
 void test_offset_clipping(){
   unsigned int address = 129123232;
@@ -21,6 +22,18 @@ void test_file_scanning(){
   TEST_ASSERT(address == 2264384);
   TEST_ASSERT(access_mode == 'R');
   TEST_ASSERT(fclose(fp) == 0);
+}
+
+void test_diff_pages_recognization(){
+  unsigned int address0 = 129123232;
+  unsigned int address1 = 129123264;
+  unsigned int pageno0 = clip_offset(address0);
+  unsigned int pageno1 = clip_offset(address1);
+  TEST_ASSERT(pageno0 == pageno1);
+  unsigned int address2 = 2264384;
+  unsigned int pageno2 = clip_offset(address2);
+  TEST_ASSERT(pageno2 != pageno0);
+  TEST_ASSERT(pageno2 != pageno1);
 }
 
 void test_diff_pages_count(){
@@ -165,12 +178,63 @@ void test_list_search(){
   destroy_list(&list);
 }
 
+void test_lruStack_functions(){
+  lruStack *ls;
+  int no_of_frames = 3;
+  create_lrustack(&ls, no_of_frames);
+  unsigned int page_0 = 17;
+  trace page_0_belongs_to = bzip;
+  unsigned int page_1 = 31; 
+  trace page_1_belongs_to = gcc;
+  unsigned int page_2 = 8;
+  trace page_2_belongs_to = gcc;
+  unsigned int page_3 = 321;
+  trace page_3_belongs_to = bzip;
+  lruNodeContent victim;
+  
+  victim = insert_page_in_stack(ls, page_0, page_0_belongs_to);
+  TEST_ASSERT(ls->currSize == 1);
+  TEST_ASSERT(victim.page_no == -1);
+  victim = insert_page_in_stack(ls, page_1, page_1_belongs_to);
+  TEST_ASSERT(ls->currSize == 2);
+  TEST_ASSERT(victim.page_no == -1);
+  victim = insert_page_in_stack(ls, page_2, page_2_belongs_to);
+  TEST_ASSERT(ls->currSize == 3);
+  TEST_ASSERT(victim.page_no == -1);
+  
+  bringPageUp(ls, page_1, page_1_belongs_to);
+  TEST_ASSERT(ls->currSize == 3);
+  TEST_ASSERT(ls->top->content.page_no == page_1);
+  TEST_ASSERT(ls->top->content.process == page_1_belongs_to);
+  
+  bringPageUp(ls, page_1, page_1_belongs_to);
+  TEST_ASSERT(ls->currSize == 3);
+  TEST_ASSERT(ls->top->content.page_no == page_1);
+  TEST_ASSERT(ls->top->content.process == page_1_belongs_to);
+  
+  bringPageUp(ls, page_0, page_0_belongs_to);
+  TEST_ASSERT(ls->currSize == 3);
+  TEST_ASSERT(ls->top->content.page_no == page_0);
+  TEST_ASSERT(ls->top->content.process == page_0_belongs_to);
+  
+  
+  victim = insert_page_in_stack(ls, page_3, page_3_belongs_to);
+  TEST_ASSERT(ls->currSize == 3);
+  TEST_ASSERT(victim.page_no == page_2);
+  TEST_ASSERT(victim.process == page_2_belongs_to);
+  
+  
+  destroy_lruStack(&ls);
+}
+
 TEST_LIST = {
   {"offset_clipping", test_offset_clipping},
   {"file_scanning", test_file_scanning},
   {"diff_pages_count", test_diff_pages_count},
+  {"diff_pages_recognization", test_diff_pages_recognization},
   {"page_table_create_delete", test_page_table_create_delete},
   {"page_table_no_of_entries", test_no_of_entries_per_bucket},
   {"overflow_list_search", test_list_search},
+  {"lruStack_functions", test_lruStack_functions},
   {NULL, NULL}
 };

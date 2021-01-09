@@ -1,5 +1,5 @@
 FLAGS = -o
-OBJ = addressOps.o hashedPageTable.o overflowList.o
+OBJ = addressOps.o hashedPageTable.o overflowList.o lruStack.o
 
 %.o: %.c
 	gcc -g -c $< -o $@
