@@ -14,7 +14,7 @@ main: main.o $(OBJ)
 	gcc $(FLAGS) main main.o $(OBJ)
 
 clean: 
-	rm -f main main.o
+	rm -f main main.o $(OBJ)
 
 clean_tests: 
 	rm -f test tests/testSuite.o $(OBJ)
