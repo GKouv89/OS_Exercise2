@@ -42,11 +42,13 @@ void remove_page_from_page_table(page_table *pt, unsigned int page_no, int *dirt
   pt->table[hash_value].no_of_entries--;
 }
 
-void destroy_page_table(page_table **pt){
+unsigned int destroy_page_table(page_table **pt){
+  unsigned int still_in_mem_dirty = 0;
   for(int i = 0; i < (*pt)->no_of_buckets; i++){
-    destroy_list(&((*pt)->table[i].bucket_list));
+    still_in_mem_dirty += destroy_list(&((*pt)->table[i].bucket_list));
   }
   free((*pt)->table);
   free(*pt);
   *pt = NULL;
+  return still_in_mem_dirty;
 }

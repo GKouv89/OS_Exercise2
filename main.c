@@ -8,6 +8,7 @@
 #include "lruStack.h"
 
 typedef struct stats{
+  unsigned int still_in_memory;
   unsigned int reads;
   unsigned int writes;
   unsigned int writebacks; 
@@ -17,7 +18,7 @@ typedef struct stats{
   unsigned int overall_refs;
 }statistics;
 
-void lru(int, int, int, statistics *);
+void lru(int, int, int *, statistics *);
 
 
 int main(int argc, char *argv[]){
@@ -46,12 +47,20 @@ int main(int argc, char *argv[]){
     max_refs = -1;
   }
   
-  statistics stats;
+  statistics stats = {.still_in_memory = 0, .reads = 0, .writes = 0, .writebacks = 0, .page_faults = 0, .bzip_refs = 0, .gcc_refs = 0, .overall_refs = 0} ;
   if(strcmp("LRU", algorithm) == 0){
-    lru(int mem_fr_count, references_count, max_refs, &stats);
+    lru(mem_fr_count, references_count, &max_refs, &stats);
   }
   
+  assert(stats.reads + stats.writes == stats.overall_refs);
+  assert(stats.overall_refs == max_refs);
+  assert(stats.gcc_refs + stats.bzip_refs == stats.overall_refs);
+  
+  
+  
   printf("+---------STATISTICS---------+\n");
+  printf("Pages still in memory at time of finishing: %u\n", stats.still_in_memory);
+  printf("Releasing all memory...\n");
   printf("Reads: %u\n", stats.reads);
   printf("Writes: %u\n", stats.writes);
   printf("Writebacks: %u\n", stats.writebacks);
@@ -59,47 +68,41 @@ int main(int argc, char *argv[]){
   printf("References read from bzip: %u\n", stats.bzip_refs);
   printf("References read from gcc: %u\n", stats.gcc_refs);
   printf("Overall references read: %u\n", stats.overall_refs);
+  // printf("\nPercentage of page faults: %lf%%\n", (stats.page_faults*100)/stats.overall_refs);
   printf("+----------------------------+\n");
   return 0;
 }
 
-void lru(int frames_count, int references_count, int max_refs, statistics *stats){
-  FILE *bzip = fopen("bzip.trace", "r");
-  FILE *gcc = fopen("gcc.trace", "r");
-  assert(bzip != NULL);
-  assert(gcc != NULL);
+void lru(int frames_count, int references_count, int *max_refs, statistics *stats){
+  FILE *bzip_file = fopen("bzip.trace", "r");
+  FILE *gcc_file = fopen("gcc.trace", "r");
+  assert(bzip_file != NULL);
+  assert(gcc_file != NULL);
   
   page_table *bzip_pt, *gcc_pt;
-  create_page_table(&bzip_pt, BZIP_PROC_BUCKETS);
-  create_page_table(&gcc_pt, GCC_PROC_BUCKETS);
+  create_page_table(&bzip_pt, BZIP_PROC_BUCKET_NO);
+  create_page_table(&gcc_pt, GCC_PROC_BUCKET_NO);
   
   unsigned int address, page_no;
-  char reading_mode;
+  char access_mode;
   int exists, dirty; 
   
   lruStack *ls;
   create_lrustack(&ls, frames_count);
   lruNodeContent victim;
   
-  if(max_refs == -1){
+  if(*max_refs == -1){
     // we read the files from start to finish
-    max_refs = 2000000; //no of lines in both files
+    *max_refs = 2000000; //no of lines in both files
   }
   // we read only a limited amount of references
-  while(!feof(bzip) && !feof(gcc) && stats->overall_refs < max_refs){
-    for(int i = 0; i < references_count && !feof(bzip) && stats->overall_refs < max_refs; i++){
-      fscanf(bzip, "%x %c\n", &address, &access_mode);
-      
-      if(access_mode == 'W'){
-        stats->writes++;
-      }else{
-        stats->reads++;
-      }
-      stats->refs++;
-      stats->bzip_refs++;
-      stats->overall_refs++;
-      
+  while(!feof(bzip_file) && !feof(gcc_file) && stats->overall_refs < *max_refs){
+    printf("while\n");
+    for(int i = 0; i < references_count && !feof(bzip_file) && stats->overall_refs < *max_refs; i++){
+      printf("bzip: i = %d\n", i);
+      fscanf(bzip_file, "%x %c\n", &address, &access_mode);
       page_no = clip_offset(address);
+      
       exists = insert_page(bzip_pt, page_no);
       if(!exists){
         // inserting in stack
@@ -119,22 +122,26 @@ void lru(int frames_count, int references_count, int max_refs, statistics *stats
         }
       }else{
         // bringing up in stack
-        bringPageUp(lruStack *, page_no, bzip);
+        bringPageUp(ls, page_no, bzip);
       }
-    }
-    for(int i = 0; i < references_count && !feof(gcc) && stats->overall_refs < max_refs; i++){
-      fscanf(gcc, "%x %c\n", &address, &access_mode);
       
       if(access_mode == 'W'){
         stats->writes++;
+        set_dirty(bzip_pt, page_no);
       }else{
         stats->reads++;
       }
-      stats->refs++;
-      stats->gcc_refs;
+      stats->bzip_refs++;
+      stats->overall_refs++;
+    }
+    for(int i = 0; i < references_count && !feof(gcc_file) && stats->overall_refs < *max_refs; i++){
+      printf("gcc i = %d\n", i);
+      fscanf(gcc_file, "%x %c\n", &address, &access_mode);
+      page_no = clip_offset(address);
+      
+      stats->gcc_refs++;
       stats->overall_refs++;
       
-      page_no = clip_offset(address);
       exists = insert_page(gcc_pt, page_no);
       if(!exists){
         // inserting in stack
@@ -154,8 +161,32 @@ void lru(int frames_count, int references_count, int max_refs, statistics *stats
         }
       }else{
         // bringing up in stack
-        bringPageUp(lruStack *, page_no, gcc);
+        bringPageUp(ls, page_no, gcc);
+      }
+      
+      if(access_mode == 'W'){
+        stats->writes++;
+        set_dirty(gcc_pt, page_no);
+      }else{
+        stats->reads++;
       }
     }
+    for(int i = 0; i < GCC_PROC_BUCKET_NO; i++){
+      printf("%d entries in GCC bucket no. %d\n", gcc_pt->table[i].no_of_entries, i);
+    }
+    for(int i = 0; i < BZIP_PROC_BUCKET_NO; i++){
+      printf("%d entries in BZIP bucket no. %d\n", bzip_pt->table[i].no_of_entries, i);
+    }
   }
+  for(int i = 0; i < BZIP_PROC_BUCKET_NO; i++){
+    stats->still_in_memory += bzip_pt->table[i].no_of_entries;
+  }
+  for(int i = 0; i < GCC_PROC_BUCKET_NO; i++){
+    stats->still_in_memory += gcc_pt->table[i].no_of_entries;
+  }
+  stats->writebacks += destroy_page_table(&bzip_pt);
+  stats->writebacks += destroy_page_table(&gcc_pt);
+  destroy_lruStack(&ls);
+  assert(fclose(bzip_file) == 0);
+  assert(fclose(gcc_file) == 0);
 }

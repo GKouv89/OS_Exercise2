@@ -90,7 +90,6 @@ void delete_lruStackNode(lruStackNode **node){
 }
 
 void destroy_lruStack(lruStack **ls){
-  printf("destroying lruStack from bottom to top\n");
   lruStackNode* temp = (*ls)->bottom;
   if(temp != NULL && (*ls)->top != NULL){
     lruStackNode* prev = NULL;
@@ -99,7 +98,6 @@ void destroy_lruStack(lruStack **ls){
       if(prev){ // Otherwise, we've reached list front
         prev->below = NULL;
       }
-      printf("deleting page no. %u of process %d\n", temp->content.page_no, temp->content.process);
       delete_lruStackNode(&temp);
       temp = prev;
     }            

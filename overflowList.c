@@ -77,9 +77,10 @@ void delete_node(oflist_node** node){
     *node = NULL;
 }
 
-void destroy_list(oflist** list){
+unsigned int destroy_list(oflist** list){
+    unsigned int still_in_mem_dirty = 0;
     if(*list == NULL){
-      return;
+      return 0;
     }
     oflist_node* temp = (*list)->rear;
     if(temp != NULL && (*list)->front != NULL){
@@ -89,6 +90,9 @@ void destroy_list(oflist** list){
             if(prev){ // Otherwise, we've reached list front
                 prev->next = NULL;
             }
+            if(temp->dirty){
+              still_in_mem_dirty++;
+            }
             delete_node(&temp);
             temp = prev;
         }            
@@ -97,5 +101,6 @@ void destroy_list(oflist** list){
     (*list)->rear = NULL;
     free(*list);
     *list = NULL;
+    return still_in_mem_dirty;
 }
 

@@ -10,7 +10,7 @@ tests/%.o: tests/%.c
 testSuite: tests/testSuite.o $(OBJ)
 	gcc $(FLAGS) test tests/testSuite.o $(OBJ)
 
-main: main.o 
+main: main.o $(OBJ) 
 	gcc $(FLAGS) main main.o $(OBJ)
 
 clean: 

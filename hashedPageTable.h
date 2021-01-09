@@ -3,8 +3,8 @@
 
 #include "overflowList.h"
 
-#define GCC_PROC_BUCKET_NO 17
-#define BZIP_PROC_BUCKET_NO 17 
+#define GCC_PROC_BUCKET_NO 512
+#define BZIP_PROC_BUCKET_NO 512 
 
 typedef struct hash_bucket{
   int no_of_entries; // this is mostly necessary for evaluation of hash function
@@ -21,6 +21,6 @@ int insert_page(page_table *, unsigned int);
 void set_dirty(page_table *, unsigned int);
 void remove_page_from_page_table(page_table *, unsigned int, int *);
 int hash_val(int, unsigned int);
-void destroy_page_table(page_table **);
+unsigned int destroy_page_table(page_table **);
 
 #endif
