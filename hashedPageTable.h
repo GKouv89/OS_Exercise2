@@ -3,8 +3,8 @@
 
 #include "overflowList.h"
 
-#define GCC_PROC_BUCKET_NO 512
-#define BZIP_PROC_BUCKET_NO 512 
+#define GCC_PROC_BUCKET_NO 23
+#define BZIP_PROC_BUCKET_NO 23 
 
 typedef struct hash_bucket{
   int no_of_entries; // this is mostly necessary for evaluation of hash function

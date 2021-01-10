@@ -61,7 +61,9 @@ void remove_page(oflist* list, unsigned int page_no, int *dirty){
       }
       *dirty = temp->dirty;
       delete_node(&temp);
+      return;
     }
+    temp = temp->next;
   }
 }
 

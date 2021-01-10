@@ -97,9 +97,7 @@ void lru(int frames_count, int references_count, int *max_refs, statistics *stat
   }
   // we read only a limited amount of references
   while(!feof(bzip_file) && !feof(gcc_file) && stats->overall_refs < *max_refs){
-    printf("while\n");
     for(int i = 0; i < references_count && !feof(bzip_file) && stats->overall_refs < *max_refs; i++){
-      printf("bzip: i = %d\n", i);
       fscanf(bzip_file, "%x %c\n", &address, &access_mode);
       page_no = clip_offset(address);
       
@@ -108,7 +106,6 @@ void lru(int frames_count, int references_count, int *max_refs, statistics *stat
         // inserting in stack
         victim = insert_page_in_stack(ls, page_no, bzip);
         if(victim.page_no != -1){
-          
           if(victim.process == bzip){
             remove_page_from_page_table(bzip_pt, victim.page_no, &dirty);
           }else{
@@ -135,10 +132,8 @@ void lru(int frames_count, int references_count, int *max_refs, statistics *stat
       stats->overall_refs++;
     }
     for(int i = 0; i < references_count && !feof(gcc_file) && stats->overall_refs < *max_refs; i++){
-      printf("gcc i = %d\n", i);
       fscanf(gcc_file, "%x %c\n", &address, &access_mode);
       page_no = clip_offset(address);
-      
       stats->gcc_refs++;
       stats->overall_refs++;
       
@@ -170,12 +165,6 @@ void lru(int frames_count, int references_count, int *max_refs, statistics *stat
       }else{
         stats->reads++;
       }
-    }
-    for(int i = 0; i < GCC_PROC_BUCKET_NO; i++){
-      printf("%d entries in GCC bucket no. %d\n", gcc_pt->table[i].no_of_entries, i);
-    }
-    for(int i = 0; i < BZIP_PROC_BUCKET_NO; i++){
-      printf("%d entries in BZIP bucket no. %d\n", bzip_pt->table[i].no_of_entries, i);
     }
   }
   for(int i = 0; i < BZIP_PROC_BUCKET_NO; i++){
