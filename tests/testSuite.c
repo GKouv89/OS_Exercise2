@@ -3,6 +3,7 @@
 #include "../hashedPageTable.h"
 #include "../overflowList.h"
 #include "../lruStack.h"
+#include "../2ndchancequeue.h"
 
 void test_offset_clipping(){
   unsigned int address = 129123232;
@@ -256,6 +257,41 @@ void test_lruStack_functions(){
   destroy_lruStack(&ls);
 }
 
+struct reference{
+  unsigned int page_no;
+};
+
+struct reference small_trace[] = {
+  [0].page_no = 17,
+  [1].page_no = 29,
+  [2].page_no = 3
+};
+
+void test_second_chance_insertion(){
+  // we go over the small trace
+  // and each of them is referenced twice, like this
+  // 17, 29, 3, 17, 29, 3
+  // so the page that will be victimized when we attempt to insert a new page number
+  // should be page no 17 (1st array element)
+  // This should test insertion, multiple removal and reinsertion and therefore linking
+  // and correct authentication of page to be inserted
+  secChanceQueue *q;
+  int frame_no = 3;
+  create_secChanceQueue(&q, frame_no);
+  NodeContent victim;
+  for(int i = 0; i < 3; i++){
+    victim  = insert_page_in_queue(q, small_trace[i].page_no, bzip);
+    TEST_ASSERT(victim.page_no == -1);
+  }
+  for(int i = 0; i < 3; i++){
+    pageUsed(q, small_trace[i].page_no, bzip);
+  }
+  victim  = insert_page_in_queue(q, 52, bzip);
+  TEST_ASSERT(victim.page_no == 17);
+  destroy_secChanceQueue(&q);
+  TEST_ASSERT(q == NULL);
+}
+
 TEST_LIST = {
   {"offset_clipping", test_offset_clipping},
   {"file_scanning", test_file_scanning},
@@ -266,5 +302,6 @@ TEST_LIST = {
   {"page_table_remove_set_dirty", test_page_table_list_remove},
   {"overflow_list_search", test_list_search},
   {"lruStack_functions", test_lruStack_functions},
+  {"second_chance_insertion", test_second_chance_insertion},
   {NULL, NULL}
 };
