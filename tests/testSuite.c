@@ -219,7 +219,7 @@ void test_lruStack_functions(){
   trace page_2_belongs_to = gcc;
   unsigned int page_3 = 321;
   trace page_3_belongs_to = bzip;
-  lruNodeContent victim;
+  NodeContent victim;
   
   victim = insert_page_in_stack(ls, page_0, page_0_belongs_to);
   TEST_ASSERT(ls->currSize == 1);

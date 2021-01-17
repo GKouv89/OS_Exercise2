@@ -19,7 +19,7 @@ lruStackNode* create_lruStackNode(int page_no, trace process){
   return new_node;
 }
 
-lruNodeContent insert_page_in_stack(lruStack *ls, int page_no, trace process){
+NodeContent insert_page_in_stack(lruStack *ls, int page_no, trace process){
   lruStackNode *new_node = create_lruStackNode(page_no, process);
   if(ls->currSize == 0){
     // empty stack
@@ -32,7 +32,7 @@ lruNodeContent insert_page_in_stack(lruStack *ls, int page_no, trace process){
     ls->top = new_node;
     ls->currSize++;
   }
-  lruNodeContent victim;
+  NodeContent victim;
   if(ls->currSize == ls->no_of_frames + 1){
     victim = victimize(ls);
     ls->currSize--;
@@ -75,9 +75,9 @@ void bringPageUp(lruStack *ls, int page_no, trace process){
   }
 }
 
-lruNodeContent victimize(lruStack *ls){
+NodeContent victimize(lruStack *ls){
   lruStackNode *to_victimize = ls->bottom;
-  lruNodeContent victim = to_victimize->content;
+  NodeContent victim = to_victimize->content;
   to_victimize->above->below = NULL;
   ls->bottom = to_victimize->above;
   delete_lruStackNode(&to_victimize);

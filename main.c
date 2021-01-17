@@ -89,7 +89,7 @@ void lru(int frames_count, int references_count, int *max_refs, statistics *stat
   
   lruStack *ls;
   create_lrustack(&ls, frames_count);
-  lruNodeContent victim;
+  NodeContent victim;
   
   if(*max_refs == -1){
     // we read the files from start to finish
