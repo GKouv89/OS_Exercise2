@@ -292,6 +292,84 @@ void test_second_chance_insertion(){
   TEST_ASSERT(q == NULL);
 }
 
+struct reference_action {
+  unsigned int page_no;
+  char action;
+};
+
+struct reference_action medium_trace[] = {
+  [0].page_no = 1, [0].action = 'W',
+  [1].page_no = 1, [1].action = 'W',
+  [2].page_no = 2, [2].action = 'R',
+  [3].page_no = 3, [3].action = 'R',
+  [4].page_no = 2, [4].action = 'R',
+  [5].page_no = 1, [5].action = 'W',
+  [6].page_no = 4, [6].action = 'R',
+  [7].page_no = 3, [7].action = 'R'
+};
+
+void test_second_chance_writebacks(){
+  page_table *pt;
+  create_page_table(&pt, BZIP_PROC_BUCKET_NO);
+  
+  int frames_count = 2;
+  secChanceQueue *q;
+  create_secChanceQueue(&q, frames_count);
+  NodeContent victim;
+  int exists, dirty; 
+  
+  unsigned int writes = 0, reads = 0, page_faults = 0, writebacks = 0;
+
+  for(int i = 0; i < 8; i++){
+    exists = insert_page(pt, medium_trace[i].page_no);
+    if(!exists){
+      // inserting in stack
+      victim = insert_page_in_queue(q, medium_trace[i].page_no, bzip);
+      if(victim.page_no != -1){
+        remove_page_from_page_table(pt, victim.page_no, &dirty);
+        switch(i){
+          case 3: TEST_ASSERT(victim.page_no == 2);
+                break;
+          case 4: TEST_ASSERT(victim.page_no == 1);
+                break;
+          case 5: TEST_ASSERT(victim.page_no == 3); 
+                break;
+          case 6: TEST_ASSERT(victim.page_no == 2);
+                break;
+          case 7: TEST_ASSERT(victim.page_no == 1);
+                break;
+          default: printf("IN CASE %d, VICTIM IS %u\n", i, victim.page_no);
+                break;
+        }
+        if(dirty){
+          writebacks++;
+        }
+      }
+      page_faults++;
+    }else{
+      // bringing up in stack
+      pageUsed(q, medium_trace[i].page_no, bzip);
+    }
+      
+    if(medium_trace[i].action == 'W'){
+      writes++;
+      set_dirty(pt, medium_trace[i].page_no);
+    }else{
+      reads++;
+    }
+  }
+  TEST_CHECK(writes == 3);
+  TEST_MSG("writes - expected = 3, actual = %u", writes);
+  TEST_CHECK(reads == 5);
+  TEST_MSG("reads - expected = 5, actual = %u", reads);
+  TEST_CHECK(writebacks == 2);
+  TEST_MSG("writebacks - expected = 2, actual = %u", writebacks);
+  TEST_CHECK(page_faults == 7);
+  TEST_MSG("PFs - expected = 7, actual = %u", page_faults);
+  destroy_secChanceQueue(&q);
+  destroy_page_table(&pt);
+}
+
 TEST_LIST = {
   {"offset_clipping", test_offset_clipping},
   {"file_scanning", test_file_scanning},
@@ -303,5 +381,6 @@ TEST_LIST = {
   {"overflow_list_search", test_list_search},
   {"lruStack_functions", test_lruStack_functions},
   {"second_chance_insertion", test_second_chance_insertion},
+  {"second_chance_writebacks", test_second_chance_writebacks},
   {NULL, NULL}
 };
