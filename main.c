@@ -31,11 +31,6 @@ int main(int argc, char *argv[]){
   }
   char algorithm[3];
   strcpy(algorithm, argv[1]);
-  // if(strcmp("LRU", algorithm) == 0){
-    // printf("LRU\n");
-  // }else if(strcmp("2ND", algorithm) == 0){
-    // printf("2nd chance\n");
-  // }else{
   if(strcmp("LRU", algorithm) != 0 && strcmp("2ND", algorithm) != 0){
     printf("Invalid algorithm\n");
     return 1;
@@ -59,20 +54,15 @@ int main(int argc, char *argv[]){
   assert(stats.reads + stats.writes == stats.overall_refs);
   assert(stats.overall_refs == max_refs);
   assert(stats.gcc_refs + stats.bzip_refs == stats.overall_refs);
-  
-  
-  
+
   printf("+---------STATISTICS---------+\n");
   printf("Pages still in memory at time of finishing: %u\n", stats.still_in_memory);
   printf("Releasing all memory...\n");
-  printf("Reads: %u\n", stats.reads);
-  printf("Writes: %u\n", stats.writes);
-  printf("Writebacks: %u\n", stats.writebacks);
-  printf("Page faults: %u\n", stats.page_faults);
+  printf("Writebacks (writes to hard drive): %u\n", stats.writebacks);
+  printf("Page faults (reads from hard drive): %u\n", stats.page_faults);
   printf("References read from bzip: %u\n", stats.bzip_refs);
   printf("References read from gcc: %u\n", stats.gcc_refs);
   printf("Overall references read: %u\n", stats.overall_refs);
-  // printf("\nPercentage of page faults: %lf%%\n", (stats.page_faults*100)/stats.overall_refs);
   printf("+----------------------------+\n");
   return 0;
 }
@@ -135,7 +125,7 @@ void lru(int frames_count, int references_count, int *max_refs, statistics *stat
       stats->bzip_refs++;
       stats->overall_refs++;
     }
-    for(int i = 0; i < references_count && !feof(gcc_file) && stats->overall_refs < *max_refs; i++){
+    for(int i = 0; i < references_count /* && !feof(gcc_file) */ && stats->overall_refs < *max_refs; i++){
       fscanf(gcc_file, "%x %c\n", &address, &access_mode);
       page_no = clip_offset(address);
       stats->gcc_refs++;
