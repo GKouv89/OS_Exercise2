@@ -22,10 +22,6 @@ secChanceNode* create_secChanceNode(int page_no, trace process){
 
 NodeContent insert_page_in_queue(secChanceQueue *q, int page_no, trace process){
   secChanceNode *new_node = create_secChanceNode(page_no, process);
-  // BUG: must change implementation 
-  // to first check for size of list 
-  // and if just full, run the victimization function
-  // then to insert in queue
   NodeContent victim;  
   if(q->currSize == 0){
     // empty stack
